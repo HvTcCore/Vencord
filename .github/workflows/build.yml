@@ -16,6 +16,8 @@ env:
 jobs:
     Build:
         runs-on: ubuntu-latest
+        outputs:
+            files: ${{ steps.list_files.outputs.files }}
 
         steps:
             - uses: actions/checkout@v4
@@ -43,6 +45,17 @@ jobs:
             - name: Clean up obsolete files
               run: |
                   rm -rf dist/*-unpacked dist/monaco Vencord.user.css vencordDesktopRenderer.css vencordDesktopRenderer.css.map
+
+            - name: List files for artifacts
+              id: list_files
+              run: |
+                echo "files=$(ls dist/* | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+
+            - name: Upload build artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: 1.All-In-One
+                  path: dist/
 
             - name: Get some values needed for the release
               id: release_values
@@ -78,3 +91,25 @@ jobs:
                   API_TOKEN: ${{ secrets.BUILDS_TOKEN }}
                   GH_REPO: Vencord/builds
                   USERNAME: GitHub-Actions
+
+    Upload-Artifacts:
+        needs: Build
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                file: ${{ fromJson(needs.Build.outputs.files) }}
+        steps:
+            - uses: actions/download-artifact@v4
+              with:
+                  name: 1.All-In-One
+                  path: dist
+
+            - name: Get filename
+              id: filename
+              run: echo "name=$(basename ${{ matrix.file }})" >> $GITHUB_OUTPUT
+
+            - name: Upload Individual Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ steps.filename.outputs.name }}
+                  path: ${{ matrix.file }}
