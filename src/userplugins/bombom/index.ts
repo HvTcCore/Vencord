@@ -24,7 +24,7 @@ import { findByPropsLazy } from "@webpack";
 import { DraftType, UploadHandler, UploadManager, UserUtils } from "@webpack/common";
 import { applyPalette, GIFEncoder, quantize } from "gifenc";
 
-const DEFAULT_DELAY = 20;
+const DEFAULT_DELAY = 30;
 const DEFAULT_RESOLUTION = 128;
 const FRAMES = 10;
 
